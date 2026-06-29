@@ -24,7 +24,8 @@ services:
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
       GROQ_API_KEY: ${GROQ_API_KEY:-}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
-      # Optional: a custom OpenAI-compatible endpoint wired in config.yaml
+      # freellm local proxy + any custom OpenAI-compatible endpoint wired in config.yaml
+      FREELLM_API_KEY: ${FREELLM_API_KEY:-}
       CUSTOM_API_KEY: ${CUSTOM_API_KEY:-}
     command: ["--config", "/app/config.yaml", "--port", "4000", "--num_workers", "2"]
     # Lets the container reach local model servers running on the host

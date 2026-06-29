@@ -71,6 +71,21 @@ model_list:
       api_base: http://host.docker.internal:8080/v1
       api_key: "no-key"
 
+  # ------------------------- freellm proxy (custom) --------------------------
+  # A local OpenAI-compatible proxy (default 127.0.0.1:31415). From inside Docker
+  # use host.docker.internal. Set FREELLM_API_KEY in .env.
+  - model_name: freellm                  # chat -> /v1/chat/completions
+    litellm_params:
+      model: openai/auto                 # "auto" picks a model on the proxy
+      api_base: http://host.docker.internal:31415/v1
+      api_key: os.environ/FREELLM_API_KEY
+
+  - model_name: freellm-embed            # embeddings -> /v1/embeddings
+    litellm_params:
+      model: openai/auto                 # or a specific family from its Embeddings tab
+      api_base: http://host.docker.internal:31415/v1
+      api_key: os.environ/FREELLM_API_KEY
+
   # ----------------- Custom OpenAI-compatible endpoint -----------------------
   # The "add any API + endpoint" case. Duplicate this block per endpoint.
   # Set CUSTOM_API_KEY in .env (or hard-code a literal string if there is no key).
