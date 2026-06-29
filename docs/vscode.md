@@ -3,9 +3,15 @@
 VSCode itself has no built-in LLM config — you use an extension. The two common
 options both support an OpenAI-compatible base URL, so they work with the gateway.
 
+> **Fastest path:** a ready-made config is in
+> [`clients/continue/config.yaml`](../clients/continue/config.yaml) — copy it to
+> `~/.continue/config.yaml` (Windows: `%USERPROFILE%\.continue\config.yaml`),
+> paste your `LITELLM_MASTER_KEY`, and the Continue sidebar button is your agent.
+
 ## Option 1 — Continue (recommended)
 
-[Continue](https://continue.dev) is an open-source AI extension.
+[Continue](https://continue.dev) is an open-source AI extension. It works in
+**both VSCode and Cursor** and adds an agent panel/button to the sidebar.
 
 1. Install **Continue** from the VSCode Marketplace.
 2. Open its config (`~/.continue/config.yaml`, or the gear icon in the Continue

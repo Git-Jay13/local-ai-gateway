@@ -3,6 +3,11 @@
 Cursor lets you override the OpenAI base URL and add custom model names. This
 routes Cursor's "OpenAI" requests through your local LiteLLM gateway.
 
+> **Prefer a sidebar agent button?** Install the **Continue** extension (it works
+> in Cursor too) and use the ready-made config at
+> [`clients/continue/config.yaml`](../clients/continue/config.yaml). The steps
+> below are for Cursor's *native* model settings instead.
+
 ## Steps
 
 1. Start the gateway (`./scripts/start.sh`) and confirm it answers:
