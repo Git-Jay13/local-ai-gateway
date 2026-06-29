@@ -48,9 +48,12 @@ cp .env.example .env          # PowerShell: Copy-Item .env.example .env
 # edit .env -> set LITELLM_MASTER_KEY, LITELLM_SALT_KEY, POSTGRES_PASSWORD,
 # WEBUI_SECRET_KEY, and any provider API keys you want.
 
-# start everything
+# start the gateway + chat
 ./scripts/start.sh            # PowerShell: ./scripts/start.ps1
 # or: docker compose up -d
+
+# ...or start EVERYTHING incl. the autonomous agent, and open both UIs:
+./scripts/start-all.sh        # PowerShell: ./scripts/start-all.ps1
 ```
 
 Then open:
