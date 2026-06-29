@@ -86,6 +86,15 @@ model_list:
       api_base: http://host.docker.internal:31415/v1
       api_key: os.environ/FREELLM_API_KEY
 
+  # Model selection: pass through ANY model the proxy offers. Call it as
+  # "freellm/<model-name>" (e.g. freellm/gpt-4o-mini) and it forwards <model-name>
+  # to the proxy. Lets you pick a specific model instead of letting "auto" decide.
+  - model_name: "freellm/*"
+    litellm_params:
+      model: "openai/*"
+      api_base: http://host.docker.internal:31415/v1
+      api_key: os.environ/FREELLM_API_KEY
+
   # ----------------- Custom OpenAI-compatible endpoint -----------------------
   # The "add any API + endpoint" case. Duplicate this block per endpoint.
   # Set CUSTOM_API_KEY in .env (or hard-code a literal string if there is no key).
