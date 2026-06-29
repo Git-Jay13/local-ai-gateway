@@ -1,0 +1,47 @@
+# Continue assistant config wired to your local-ai-gateway.
+# Continue is one extension that works in BOTH VSCode and Cursor and adds an
+# agent panel/button to the sidebar -- so this is your "agent button".
+#
+# Install:
+#   1) Install the "Continue" extension (VSCode Marketplace / Open VSX -> works in Cursor too).
+#   2) Copy this file to your Continue config dir:
+#        - macOS/Linux:  ~/.continue/config.yaml
+#        - Windows:      %USERPROFILE%\.continue\config.yaml
+#   3) Replace REPLACE_WITH_LITELLM_MASTER_KEY below with your LITELLM_MASTER_KEY.
+#   4) Make sure the gateway is running (docker compose up -d).
+#   5) Open the Continue panel (sidebar button) and pick a model from the dropdown.
+#
+# Every model points at the gateway, so it routes to whatever you configured in
+# litellm/config.yaml (cloud, local, or your freellm proxy).
+name: local-ai-gateway
+version: 0.0.1
+schema: v1
+
+models:
+  - name: freellm (gateway)
+    provider: openai
+    model: freellm
+    apiBase: http://localhost:4000/v1
+    apiKey: REPLACE_WITH_LITELLM_MASTER_KEY
+    roles: [chat, edit, apply]
+
+  - name: gpt-4o (gateway)
+    provider: openai
+    model: gpt-4o
+    apiBase: http://localhost:4000/v1
+    apiKey: REPLACE_WITH_LITELLM_MASTER_KEY
+    roles: [chat, edit, apply]
+
+  - name: claude-sonnet (gateway)
+    provider: openai
+    model: claude-sonnet
+    apiBase: http://localhost:4000/v1
+    apiKey: REPLACE_WITH_LITELLM_MASTER_KEY
+    roles: [chat, edit, apply]
+
+  - name: freellm-embed (gateway)
+    provider: openai
+    model: freellm-embed
+    apiBase: http://localhost:4000/v1
+    apiKey: REPLACE_WITH_LITELLM_MASTER_KEY
+    roles: [embed]

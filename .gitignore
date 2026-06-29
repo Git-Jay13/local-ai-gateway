@@ -1,0 +1,13 @@
+# Secrets / local config
+.env
+*.local
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Runtime data (volumes are managed by Docker, but ignore stray dumps)
+*.log
+data/

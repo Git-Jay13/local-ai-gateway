@@ -1,0 +1,116 @@
+# =============================================================================
+# LiteLLM gateway configuration
+# -----------------------------------------------------------------------------
+# Each entry in model_list becomes a model your gateway exposes at
+# http://localhost:4000/v1 . The "model_name" is the public name clients use;
+# "litellm_params.model" is the provider-prefixed real model.
+#
+# Add as many providers/endpoints as you like -- cloud or local. Set the
+# matching API keys in your .env file (see .env.example).
+#
+# Reference: https://docs.litellm.ai/docs/proxy/configs
+# Providers:  https://docs.litellm.ai/docs/providers
+# =============================================================================
+
+model_list:
+  # ----------------------------- Cloud providers -----------------------------
+  # OpenAI
+  - model_name: gpt-4o
+    litellm_params:
+      model: openai/gpt-4o
+      api_key: os.environ/OPENAI_API_KEY
+
+  - model_name: gpt-4o-mini
+    litellm_params:
+      model: openai/gpt-4o-mini
+      api_key: os.environ/OPENAI_API_KEY
+
+  # Anthropic
+  - model_name: claude-sonnet
+    litellm_params:
+      model: anthropic/claude-3-5-sonnet-latest
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  # Google Gemini
+  - model_name: gemini-flash
+    litellm_params:
+      model: gemini/gemini-1.5-flash
+      api_key: os.environ/GEMINI_API_KEY
+
+  # Groq (fast inference)
+  - model_name: groq-llama3
+    litellm_params:
+      model: groq/llama-3.3-70b-versatile
+      api_key: os.environ/GROQ_API_KEY
+
+  # OpenRouter -- one key, hundreds of models. Use "openrouter/<model>".
+  - model_name: openrouter-auto
+    litellm_params:
+      model: openrouter/auto
+      api_key: os.environ/OPENROUTER_API_KEY
+
+  # ------------------------------ Local models -------------------------------
+  # Ollama running on the host machine (https://ollama.com)
+  #   1) `ollama pull llama3`   2) keep `ollama serve` running on :11434
+  - model_name: llama3-local
+    litellm_params:
+      model: ollama_chat/llama3
+      api_base: http://host.docker.internal:11434
+
+  # LM Studio local server (OpenAI-compatible, default port 1234)
+  - model_name: lmstudio-local
+    litellm_params:
+      model: openai/local-model            # name shown in LM Studio
+      api_base: http://host.docker.internal:1234/v1
+      api_key: "lm-studio"                 # LM Studio ignores the value
+
+  # llama.cpp / any OpenAI-compatible local server
+  - model_name: llamacpp-local
+    litellm_params:
+      model: openai/local
+      api_base: http://host.docker.internal:8080/v1
+      api_key: "no-key"
+
+  # ------------------------- freellm proxy (custom) --------------------------
+  # A local OpenAI-compatible proxy (default 127.0.0.1:31415). From inside Docker
+  # use host.docker.internal. Set FREELLM_API_KEY in .env.
+  - model_name: freellm                  # chat -> /v1/chat/completions
+    litellm_params:
+      model: openai/auto                 # "auto" picks a model on the proxy
+      api_base: http://host.docker.internal:31415/v1
+      api_key: os.environ/FREELLM_API_KEY
+
+  - model_name: freellm-embed            # embeddings -> /v1/embeddings
+    litellm_params:
+      model: openai/auto                 # or a specific family from its Embeddings tab
+      api_base: http://host.docker.internal:31415/v1
+      api_key: os.environ/FREELLM_API_KEY
+
+  # Model selection: pass through ANY model the proxy offers. Call it as
+  # "freellm/<model-name>" (e.g. freellm/gpt-4o-mini) and it forwards <model-name>
+  # to the proxy. Lets you pick a specific model instead of letting "auto" decide.
+  - model_name: "freellm/*"
+    litellm_params:
+      model: "openai/*"
+      api_base: http://host.docker.internal:31415/v1
+      api_key: os.environ/FREELLM_API_KEY
+
+  # ----------------- Custom OpenAI-compatible endpoint -----------------------
+  # The "add any API + endpoint" case. Duplicate this block per endpoint.
+  # Set CUSTOM_API_KEY in .env (or hard-code a literal string if there is no key).
+  - model_name: my-custom-endpoint
+    litellm_params:
+      model: openai/<model-name-on-that-server>
+      api_base: https://your-endpoint.example.com/v1
+      api_key: os.environ/CUSTOM_API_KEY
+
+# ----------------------------- Gateway behavior ------------------------------
+litellm_settings:
+  drop_params: true          # silently drop params a given model doesn't support
+  num_retries: 2
+  request_timeout: 600
+  # set_verbose: true        # uncomment to debug routing/requests
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  database_url: os.environ/DATABASE_URL

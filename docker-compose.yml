@@ -1,0 +1,129 @@
+services:
+  # ---------------------------------------------------------------------------
+  # LiteLLM proxy -- the unified, OpenAI-compatible gateway.
+  # Exposes http://localhost:4000/v1 . Point Cursor / VSCode / Antigravity /
+  # any OpenAI-compatible client at this URL using LITELLM_MASTER_KEY as the key.
+  # ---------------------------------------------------------------------------
+  litellm:
+    image: ghcr.io/berriai/litellm:main-stable
+    container_name: litellm
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./litellm/config.yaml:/app/config.yaml:ro
+    environment:
+      # Gateway auth + persistence
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
+      LITELLM_SALT_KEY: ${LITELLM_SALT_KEY}
+      DATABASE_URL: postgresql://litellm:${POSTGRES_PASSWORD}@db:5432/litellm
+      STORE_MODEL_IN_DB: "True"
+      # Provider keys (only the ones you set are used; see .env.example)
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      # freellm local proxy + any custom OpenAI-compatible endpoint wired in config.yaml
+      FREELLM_API_KEY: ${FREELLM_API_KEY:-}
+      CUSTOM_API_KEY: ${CUSTOM_API_KEY:-}
+    command: ["--config", "/app/config.yaml", "--port", "4000", "--num_workers", "2"]
+    # Lets the container reach local model servers running on the host
+    # (Ollama :11434, LM Studio :1234, llama.cpp, etc.) via host.docker.internal
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:4000/health/liveliness').read() else 1)\" || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # ---------------------------------------------------------------------------
+  # Postgres -- stores LiteLLM keys/teams/spend and any models added via the UI.
+  # ---------------------------------------------------------------------------
+  db:
+    image: postgres:16-alpine
+    container_name: litellm-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: litellm
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: litellm
+    volumes:
+      - litellm-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U litellm -d litellm"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # Open WebUI -- the local chat interface, talks to LiteLLM as its backend.
+  # Open http://localhost:3000 in your browser.
+  # ---------------------------------------------------------------------------
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    restart: unless-stopped
+    ports:
+      - "3000:8080"
+    environment:
+      # Use LiteLLM as the single OpenAI-compatible backend
+      OPENAI_API_BASE_URL: http://litellm:4000/v1
+      OPENAI_API_KEY: ${LITELLM_MASTER_KEY}
+      WEBUI_SECRET_KEY: ${WEBUI_SECRET_KEY}
+      # Disable the separate Ollama integration; everything routes through LiteLLM
+      ENABLE_OLLAMA_API: "false"
+      # Pre-select freellm as the default model in the chat UI
+      DEFAULT_MODELS: ${OPENWEBUI_DEFAULT_MODEL:-freellm}
+    volumes:
+      - open-webui-data:/app/backend/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - litellm
+
+  # ---------------------------------------------------------------------------
+  # OpenHands -- the autonomous agent (chat + full automation: runs commands,
+  # edits files, browses). Wired to the gateway by default. Lives behind the
+  # "agent" profile so it only starts when you ask for it:
+  #     docker compose --profile agent up -d
+  # Opens at http://localhost:3100 .
+  #
+  # SECURITY: this agent has FULL control of a sandbox and mounts the Docker
+  # socket so it can spawn its runtime. Only run it on a machine you trust.
+  # ---------------------------------------------------------------------------
+  openhands:
+    image: docker.openhands.dev/openhands/openhands:${OPENHANDS_VERSION:-1.8}
+    container_name: openhands
+    profiles: ["agent"]
+    pull_policy: always
+    restart: unless-stopped
+    ports:
+      - "3100:3000"
+    environment:
+      # Sandbox/runtime image OpenHands spawns for the agent
+      AGENT_SERVER_IMAGE_REPOSITORY: ghcr.io/openhands/agent-server
+      AGENT_SERVER_IMAGE_TAG: ${OPENHANDS_AGENT_SERVER_TAG:-1.26.0-python}
+      LOG_ALL_EVENTS: "true"
+      # Default LLM = the gateway. You can also set this in the OpenHands UI
+      # (Settings -> LLM -> Advanced -> Base URL / Custom Model / API Key).
+      LLM_BASE_URL: ${OPENHANDS_LLM_BASE_URL:-http://host.docker.internal:4000/v1}
+      LLM_API_KEY: ${OPENHANDS_LLM_API_KEY:-${LITELLM_MASTER_KEY}}
+      LLM_MODEL: ${OPENHANDS_LLM_MODEL:-openai/freellm}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - openhands-data:/.openhands
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - litellm
+
+volumes:
+  litellm-db-data:
+  open-webui-data:
+  openhands-data:
