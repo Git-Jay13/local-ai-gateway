@@ -85,6 +85,43 @@ services:
     depends_on:
       - litellm
 
+  # ---------------------------------------------------------------------------
+  # OpenHands -- the autonomous agent (chat + full automation: runs commands,
+  # edits files, browses). Wired to the gateway by default. Lives behind the
+  # "agent" profile so it only starts when you ask for it:
+  #     docker compose --profile agent up -d
+  # Opens at http://localhost:3100 .
+  #
+  # SECURITY: this agent has FULL control of a sandbox and mounts the Docker
+  # socket so it can spawn its runtime. Only run it on a machine you trust.
+  # ---------------------------------------------------------------------------
+  openhands:
+    image: docker.openhands.dev/openhands/openhands:${OPENHANDS_VERSION:-1.8}
+    container_name: openhands
+    profiles: ["agent"]
+    pull_policy: always
+    restart: unless-stopped
+    ports:
+      - "3100:3000"
+    environment:
+      # Sandbox/runtime image OpenHands spawns for the agent
+      AGENT_SERVER_IMAGE_REPOSITORY: ghcr.io/openhands/agent-server
+      AGENT_SERVER_IMAGE_TAG: ${OPENHANDS_AGENT_SERVER_TAG:-1.26.0-python}
+      LOG_ALL_EVENTS: "true"
+      # Default LLM = the gateway. You can also set this in the OpenHands UI
+      # (Settings -> LLM -> Advanced -> Base URL / Custom Model / API Key).
+      LLM_BASE_URL: ${OPENHANDS_LLM_BASE_URL:-http://host.docker.internal:4000/v1}
+      LLM_API_KEY: ${OPENHANDS_LLM_API_KEY:-${LITELLM_MASTER_KEY}}
+      LLM_MODEL: ${OPENHANDS_LLM_MODEL:-openai/freellm}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - openhands-data:/.openhands
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - litellm
+
 volumes:
   litellm-db-data:
   open-webui-data:
+  openhands-data:

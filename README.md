@@ -9,6 +9,10 @@ tools, wired together so you barely have to write any code:
   Anthropic, Gemini, Groq, OpenRouter, or any custom endpoint + key).
 - **[Open WebUI](https://github.com/open-webui/open-webui)** — a local chat UI
   (`http://localhost:3000`) that talks to the gateway.
+- **[OpenHands](https://github.com/OpenHands/OpenHands)** *(optional)* — a local
+  **autonomous agent** (`http://localhost:3100`) that doesn't just chat but runs
+  commands, edits files, and browses with full control, using your gateway models.
+  Lives behind the `agent` profile. See [`docs/openhands.md`](docs/openhands.md).
 
 You add custom providers/endpoints in one config file (or the LiteLLM admin UI),
 then point **Cursor, VSCode, Antigravity** (and use it from **Devin**) at the same
@@ -56,6 +60,7 @@ Then open:
 | Chat UI (Open WebUI) | http://localhost:3000 | create a local account on first visit |
 | Gateway API (OpenAI-compatible) | http://localhost:4000/v1 | `Authorization: Bearer $LITELLM_MASTER_KEY` |
 | LiteLLM admin UI | http://localhost:4000/ui | log in with `LITELLM_MASTER_KEY` |
+| Autonomous agent (OpenHands) | http://localhost:3100 | start with `docker compose --profile agent up -d` |
 
 Stop with `./scripts/stop.sh` (add `--volumes` to wipe stored data).
 
@@ -119,6 +124,7 @@ API base, and key. No restart needed; persists in the database.
 The pattern is identical everywhere: set the **base URL** to `http://localhost:4000/v1`
 and the **API key** to your `LITELLM_MASTER_KEY`. Per-tool guides:
 
+- Autonomous agent (OpenHands) → [`docs/openhands.md`](docs/openhands.md)
 - Cursor → [`docs/cursor.md`](docs/cursor.md)
 - VSCode (Continue / Copilot BYOK) → [`docs/vscode.md`](docs/vscode.md)
 - Antigravity → [`docs/antigravity.md`](docs/antigravity.md)
