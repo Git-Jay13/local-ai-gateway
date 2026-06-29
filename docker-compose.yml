@@ -78,6 +78,8 @@ services:
       WEBUI_SECRET_KEY: ${WEBUI_SECRET_KEY}
       # Disable the separate Ollama integration; everything routes through LiteLLM
       ENABLE_OLLAMA_API: "false"
+      # Pre-select freellm as the default model in the chat UI
+      DEFAULT_MODELS: ${OPENWEBUI_DEFAULT_MODEL:-freellm}
     volumes:
       - open-webui-data:/app/backend/data
     extra_hosts:
